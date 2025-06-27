@@ -1,0 +1,52 @@
+server:
+  workers: 1
+  node:
+    environment: "dev"
+
+coordinator:
+  jvm:
+    maxHeapSize: "1G"
+
+worker:
+  jvm:
+    maxHeapSize: "1G"
+
+service:
+  port: 8666
+
+catalogs:
+  lakehouse: |-
+    connector.name=iceberg
+    hive.metastore.uri=thrift://metastore.deplatform.local:32083
+    iceberg.catalog.type=hive_metastore
+    iceberg.file-format=PARQUET
+    fs.native-s3.enabled=true
+    s3.endpoint=http://minio.deplatform.local:32000
+    s3.region=us-west-2
+    s3.path-style-access=true
+    s3.aws-access-key=${ENV:AWS_ACCESS_KEY}
+    s3.aws-secret-key=${ENV:AWS_SECRET_KEY}
+
+coordinator:
+  jvm:
+    additional-opts:
+      - "-Dlog.level=DEBUG"
+      - "--enable-native-access=ALL-UNNAMED"
+worker:
+  jvm:
+    additional-opts:
+      - "--enable-native-access=ALL-UNNAMED"
+
+serviceAccount:
+  create: true
+  name: "trino"
+
+envFrom:
+  - secretRef:
+      name: services.trino.raw-aws-access-key
+  - secretRef:
+      name: services.trino.raw-aws-secret-key
+
+additionalConfigProperties:
+  - http-server.process-forwarded=true
+

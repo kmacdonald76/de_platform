@@ -1,0 +1,67 @@
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: flink-apps-pv
+spec:
+  capacity:
+    storage: 2Gi
+  accessModes:
+    - ReadWriteOnce
+  storageClassName: local-storage
+  local:
+    path: /data/flinkapps
+  nodeAffinity:
+    required:
+      nodeSelectorTerms:
+        - matchExpressions:
+            - key: kubernetes.io/hostname
+              operator: In
+              values:
+                - minikube # the hostname of your node
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: flink-apps-pvc
+spec:
+  accessModes:
+    - ReadWriteOnce
+  volumeName: flink-apps-pv
+  resources:
+    requests:
+      storage: 2Gi
+  storageClassName: local-storage
+---
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: flink-libs-pv
+spec:
+  capacity:
+    storage: 2Gi
+  accessModes:
+    - ReadWriteOnce
+  storageClassName: local-storage
+  local:
+    path: /data/flinklibs
+  nodeAffinity:
+    required:
+      nodeSelectorTerms:
+        - matchExpressions:
+            - key: kubernetes.io/hostname
+              operator: In
+              values:
+                - minikube # the hostname of your node
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: flink-libs-pvc
+spec:
+  accessModes:
+    - ReadWriteOnce
+  volumeName: flink-libs-pv
+  resources:
+    requests:
+      storage: 2Gi
+  storageClassName: local-storage

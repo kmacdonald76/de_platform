@@ -1,0 +1,33 @@
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: metastore-ingress
+  namespace: iceberg
+spec:
+  rules:
+  - host: metastore.deplatform.local
+    http:
+      paths:
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: hive-metastore
+            port:
+              number: 9083
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: hive-metastore
+  namespace: iceberg
+spec:
+  type: NodePort
+  ports:
+    - port: 9083
+      targetPort: 9083
+      nodePort: 32083
+      name: thrift-server
+  type: NodePort
+  selector:
+    app: hive-metastore

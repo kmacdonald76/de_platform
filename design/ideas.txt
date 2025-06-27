@@ -1,0 +1,26 @@
+## Data modelling ideas..
+
+ - apply star schema in silver layer + define table linkage
+   .. This is still aligned with original idea behind medallion design, where data is explorable but no business logic is introduced yet
+   .. this may make applying business logic easier, since we would know all the connections across tables at this stage
+ 
+
+ - support schema from source -> bronze
+    (or go straight from source -> silver)
+    .. for streaming sources, we may not want to rely on trino transformations, as this will introduce high latency for data readiness
+
+
+# Dataset onboarding: ideas
+
+ - homebrew install stats: https://formulae.brew.sh/analytics/
+
+
+# Ideas
+
+ - improve cloud storage performance through the use of DirectPV: https://min.io/docs/directpv/concepts/architecture/
+ 
+ - modularize better by not using service names specicially.
+ 
+   e.g. don't call secrets MINIO_XYZ, call them OBJECT_STORAGE_XYZ
+ 
+ - LLM config file creation

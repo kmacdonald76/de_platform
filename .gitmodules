@@ -1,0 +1,9 @@
+[submodule "secrets"]
+	path = secrets
+	url = git@github.com:kmacdonald76/de_secrets.git
+[submodule "airflow/dags"]
+	path = airflow/dags
+	url = git@github.com:kmacdonald76/de_airflow.git
+[submodule "data_models"]
+	path = data_models
+	url = git@github.com:kmacdonald76/de_data_models.git

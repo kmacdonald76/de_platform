@@ -1,0 +1,26 @@
+postgresql:
+  postgresqlPassword: password
+bootstrapScript: |
+  #!/bin/bash
+  uv pip install .[postgres] \
+    .[psycopg2-binary] &&\
+  if [ ! -f ~/bootstrap ]; then echo "Running Superset with uid {{ .Values.runAsUser }}" > ~/bootstrap; fi
+image:
+  repository: superset
+  tag: dev
+  pullPolicy: IfNotPresent
+configOverrides:
+  my_override: |
+    SECRET_KEY = 'Fl/w89fbzD9PEhiBwD7gaeuUrmHlmat0xqfTTR5tB5YeSCfKEVkkmQLo'
+extraConfigs:
+  import_datasources.yaml: |
+    databases:
+    - allow_file_upload: true
+      allow_ctas: true
+      allow_cvas: true
+      database_name: lakehouse
+      extra: "{\r\n    \"metadata_params\": {},\r\n    \"engine_params\": {},\r\n    \"\
+        metadata_cache_timeout\": {},\r\n    \"schemas_allowed_for_file_upload\": []\r\n\
+        }"
+      sqlalchemy_uri: trino://admin@trino.deplatform.local/lakehouse/silver
+      tables: []

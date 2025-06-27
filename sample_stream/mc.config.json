@@ -1,0 +1,12 @@
+{
+	"version": "10",
+	"aliases": {
+		"local": {
+			"url": "http://minio.deplatform.local:32000",
+			"accessKey": "data",
+			"secretKey": "engineer",
+			"api": "s3v4",
+			"path": "auto"
+		}
+	}
+}

@@ -1,0 +1,75 @@
+apiVersion: flink.apache.org/v1beta1
+kind: FlinkDeployment
+metadata:
+    name: ingest-foodb-testing
+    namespace: flink
+    labels:
+        component: jobmanager
+spec:
+    image: flink-iceberg-hive:dev
+    flinkVersion: v1_20
+    serviceAccount: flink
+    mode: native
+    job:
+        jarURI: s3a://flink-apps/ingestion-1.0.0.jar
+        entryClass: com.dataplatform.App
+        args:
+            - --config
+            - common.bronze.foodb-ca
+            - --overwrite
+        parallelism: 1
+        upgradeMode: stateless
+        state: running
+    jobManager:
+        resource:
+            cpu: 1
+            memory: 1Gi
+    taskManager:
+        resource:
+            cpu: 1
+            memory: 7Gi
+    flinkConfiguration:
+        observability.disableCheckpointObserver: "true"
+        state.checkpoints.dir: s3a://flink-apps/checkpoints/foodb_testing/
+        state.savepoints.dir: s3a://flink-apps/savepoints/foodb_testing/
+        execution.checkpointing.interval: 5m
+        # some issue w/ closing log at end of task-manager execution
+        classloader.check-leaked-classloader: "false"
+        deployment.target: kubernetes-application
+        kubernetes.jobmanager.exit-on-failure: "true"
+        jobmanager.memory.process.size: 1g
+        taskmanager.memory.process.size: 7Gi
+        jobmanager.rpc.address: flink-ingestion
+        jobmanager.rpc.port: "36022"
+        jobmanager.archive.fs.dir: s3a://flink-apps/completed-jobs/foodb_testing/
+        taskmanager.numberOfTaskSlots: "2"
+        taskmanager.rpc.port: "36122"
+        sqlgateway.workers: "2"
+        iceberg.catalog.hive.type: hive
+        iceberg.catalog.hive.uri: thrift://metastore.deplatform.local:32083
+        iceberg.catalog.hive.warehouse: s3a://iceberg/
+        flink.hadoop.fs.s3a.access.key: data
+        flink.hadoop.fs.s3a.secret.key: engineer
+        flink.hadoop.fs.s3a.endpoint: http://minio.deplatform.local:32000
+        flink.hadoop.fs.s3a.path.style.access: "true"
+        fs.s3a.access.key: data
+        fs.s3a.secret.key: engineer
+        fs.s3a.endpoint: http://minio.deplatform.local:32000
+        fs.s3a.path.style.access: "true"
+        s3.endpoint: http://minio.deplatform.local:32000
+        s3.path.style.access: "true"
+        s3.path-style: "true"
+        s3.access-key: admin
+        s3.secret-key: password
+        classloader.parent-first-patterns.additional: com.codahale.metrics
+    podTemplate:
+        spec:
+            volumes:
+            - name: hive-conf
+              secret:
+                secretName: services.flink.raw-hive-conf
+            containers:
+                - name: flink-main-container
+                  volumeMounts:
+                    - name: hive-conf
+                      mountPath: /opt/hive-conf

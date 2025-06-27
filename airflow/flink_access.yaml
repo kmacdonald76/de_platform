@@ -1,0 +1,25 @@
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: airflow-flink-deploy-role
+rules:
+  - apiGroups: ["flink.apache.org"]
+    resources: ["flinkdeployments"]  # optional, depends on your use
+    verbs: ["create", "get", "list", "watch", "update", "patch", "delete"]
+  - apiGroups: [""]
+    resources: ["pods"]  # optional, depends on your use
+    verbs: ["get", "list", "watch", "delete"]
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: airflow-flink-deploy-rolebinding
+subjects:
+  - kind: ServiceAccount
+    name: airflow-worker
+    namespace: airflow
+roleRef:
+  kind: ClusterRole
+  name: airflow-flink-deploy-role
+  apiGroup: rbac.authorization.k8s.io
+

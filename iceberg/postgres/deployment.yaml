@@ -1,0 +1,52 @@
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: postgres
+  namespace: iceberg
+spec:
+  serviceName: postgres
+  replicas: 1
+  selector:
+    matchLabels:
+      app: postgres
+  template:
+    metadata:
+      labels:
+        app: postgres
+    spec:
+      containers:
+        - name: postgres
+          image: postgres:17
+          env:
+            - name: POSTGRES_DB
+              value: hive
+          envFrom:
+            - secretRef:
+                name: services.iceberg.raw-postgres-user
+            - secretRef:
+                name: services.iceberg.raw-postgres-password
+          args:
+            - "-c"
+            - "password_encryption=md5"
+          ports:
+            - containerPort: 5432
+              name: postgres
+          volumeMounts:
+            - name: postgres-storage
+              mountPath: /var/lib/postgresql
+            - name: postgres-hba-conf
+              mountPath: /etc/postgreql/pg_hba.conf
+              subPath: pg_hba.conf
+            - name: postgres-conf
+              mountPath: /etc/postgreql/postgresql.conf
+              subPath: postgresql.conf
+      volumes:
+      - name: postgres-storage
+        persistentVolumeClaim:
+          claimName: postgres-pvc
+      - name: postgres-hba-conf
+        secret:
+          secretName: services.iceberg.raw-postgres-hba-conf
+      - name: postgres-conf
+        secret:
+          secretName: services.iceberg.raw-postgres-conf

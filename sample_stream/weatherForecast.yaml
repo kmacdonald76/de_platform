@@ -1,0 +1,28 @@
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: weather-fetcher
+spec:
+  schedule: "*/1 * * * *"  # Runs every minute
+  jobTemplate:
+    spec:
+      template:
+        spec:
+          restartPolicy: Never
+          containers:
+          - name: weather-fetcher
+            image: sample-stream:dev
+            command: ["/bin/bash", "-c"]
+            args:
+              - |
+                set -e
+                DATE=$(date +%Y%m%d%H%M)
+                TMP_FILE="/tmp/$DATE.json"
+                
+                # Fetch weather data and append to file
+                curl -s "https://weather.gc.ca/api/app/en/Location/48.433,-123.362?type=city" | \
+                jq -c '.[0].hourlyFcst.hourly[] | {date, time, condition, precip, temperature_c: .temperature.metric, epochTime}' >> $TMP_FILE
+
+                # Upload to MinIO S3
+                mc alias set local http://minio.deplatform.local:32000 data engineer
+                mc cp $TMP_FILE local/iceberg/landing/victoria_bc_weather_forecast/$DATE.json

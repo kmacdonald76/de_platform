@@ -1,0 +1,26 @@
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: drivers-pv
+spec:
+  capacity:
+    storage: 10Mi
+  accessModes:
+    - ReadWriteOnce
+  storageClassName: local-storage
+  hostPath:
+    path: /data/drivers
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: drivers-pvc
+spec:
+  accessModes:
+    - ReadWriteOnce
+  volumeName: drivers-pv
+  resources:
+    requests:
+      storage: 10Mi
+  storageClassName: local-storage
+

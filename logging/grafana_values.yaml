@@ -1,0 +1,13 @@
+datasources:
+  datasources.yaml:
+    apiVersion: 1
+    datasources:
+      - name: Loki
+        type: loki
+        access: proxy
+        url: http://loki-gateway.logging.svc.cluster.local
+        basicAuth: false
+        isDefault: true
+        jsonData:
+          timeout: 60
+          maxLines: 1000

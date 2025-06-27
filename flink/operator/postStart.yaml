@@ -1,0 +1,36 @@
+postStart:
+  exec:
+    command:
+      - /bin/sh
+      - -c
+      - 'rm -rf $FLINK_PLUGINS_DIR/flink-s3-fs-hadoop &&
+        mkdir $FLINK_PLUGINS_DIR/flink-s3-fs-hadoop && 
+        curl -H "Accept: application/zip" https://repo1.maven.org/maven2/org/apache/flink/flink-s3-fs-hadoop/1.20.0/flink-s3-fs-hadoop-1.20.0.jar --output $FLINK_PLUGINS_DIR/flink-s3-fs-hadoop/flink-s3-fs-hadoop-1.20.0.jar &&
+        rm -rf $FLINK_PLUGINS_DIR/hadoop-common/ &&
+        mkdir $FLINK_PLUGINS_DIR/hadoop-common &&
+        curl -H "Accept: application/zip" https://repo1.maven.org/maven2/org/apache/hadoop/hadoop-common/3.1.3/hadoop-common-3.1.3.jar --output $FLINK_PLUGINS_DIR/hadoop-common/hadoop-common-3.1.3.jar &&
+        rm -rf $FLINK_PLUGINS_DIR/hadoop-hdfs-client/ &&
+        mkdir $FLINK_PLUGINS_DIR/hadoop-hdfs-client &&
+        curl -H "Accept: application/zip" https://repo1.maven.org/maven2/org/apache/hadoop/hadoop-hdfs-client/3.1.3/hadoop-hdfs-client-3.1.3.jar --output $FLINK_PLUGINS_DIR/hadoop-hdfs-client/hadoop-hdfs-client-3.1.3.jar'
+image:
+  repository: flink-kubernetes-operator
+  tag: 1.12
+defaultConfiguration:
+  create: true
+  append: true
+  flink-conf.yaml: |+
+    kubernetes.operator.metrics.reporter.slf4j.factory.class: org.apache.flink.metrics.slf4j.Slf4jReporterFactory
+    kubernetes.operator.metrics.reporter.slf4j.interval: 5 MINUTE
+    kubernetes.operator.reconcile.interval: 15 s
+    kubernetes.operator.observer.progress-check.interval: 5 s
+    kubernetes.operator.jm-deployment.shutdown-ttl: 2 min
+    s3.endpoint: http://minio.deplatform.local:32000
+    s3.path-style: true
+    iceberg.catalog.hive.uri: thrift://metastore.deplatform.local:32083
+    iceberg.catalog.hive.type: hive
+    iceberg.catalog.hive.warehouse: s3a://iceberg/
+    rest.retry.max-attempts: 20
+    rest.retry.delay: 500
+  log4j-console.properties: |+
+    # Flink Deployment Logging Overrides
+    rootLogger.level = INFO
