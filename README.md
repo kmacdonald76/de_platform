@@ -1,4 +1,4 @@
-# de_platform: A Cloud-Agnostic Data Platform
+# A Cloud-Agnostic Data Platform
 
 A cloud-agnostic open-source data platform built to support both batch and streaming workflows.  Focused on configuration-driven pipelines and modular design. Provides a modern, robust end-to-end foundation that can be extended as needed. 
 
