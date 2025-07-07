@@ -41,7 +41,7 @@ public class DataStreamInjector {
             DataStream<Row> rowStream = env.fromSource(source, WatermarkStrategy.noWatermarks(), "ZippedJsonSource")
                     .setParallelism(1);
 
-            Schema schema = datastreamSchemaConverter(config.getSchema());
+            Schema schema = buildSchemaFromConfig(config.getSchema(), null);
 
             Table inputTable = streamTableEnv.fromDataStream(rowStream, schema);
 
@@ -62,6 +62,9 @@ public class DataStreamInjector {
                 parameters = config.getSource().getIteration().getParameters();
             }
 
+            // Build the Flink Schema based on the ingestion config
+            Schema schema = buildSchemaFromConfig(config.getSchema(), config.getFlatteningConfig());
+
             // Create HttpSourceConfig from the ingestion config
             HttpSourceConfig httpConfig = new HttpSourceConfig(
                     config.getSource().getConnection().getUrl(),
@@ -71,14 +74,15 @@ public class DataStreamInjector {
                     config.getSchema(),
                     config.getSource().getParserOptions(),
                     config.getSource().getArrayField(),
-                    config.getSource().getMapField());
+                    config.getSource().getMapField(),
+                    config.getFlatteningConfig(),
+                    schema);
 
             // Create the HttpSource
-            Source<Row, ?, ?> source = new HttpSource<>(httpConfig, Row.class);
+            Source<Row, ?, ?> source = new HttpSource<>(httpConfig);
             DataStream<Row> rowStream = env.fromSource(source, WatermarkStrategy.noWatermarks(), "HttpSource")
                     .setParallelism(1);
 
-            Schema schema = datastreamSchemaConverter(httpConfig.getSchema());
             Table inputTable = streamTableEnv.fromDataStream(rowStream, schema);
 
             // Register the table
@@ -92,62 +96,138 @@ public class DataStreamInjector {
         return null;
     }
 
+    private static List<DataTypes.Field> extractSchemaFromFlatteningConfig(Map<String, Object> flatteningConfig) throws Exception {
+        List<DataTypes.Field> fields = new ArrayList<>();
+        if (flatteningConfig == null || flatteningConfig.isEmpty()) {
+            return fields;
+        }
+
+        if (flatteningConfig.containsKey("f.map_merge_with_rows")) {
+            Map<String, Object> mapConfig = (Map<String, Object>) flatteningConfig.get("f.map_merge_with_rows");
+            for (Map.Entry<String, Object> entry : mapConfig.entrySet()) {
+                String key = entry.getKey();
+                Object value = entry.getValue();
+
+                if (key.equals("f._parent_key")) {
+                    fields.add(DataTypes.FIELD(key, convertStringToDataType((String) value)));
+                } else if (value instanceof Map) {
+                    // Recursive call for nested functions or schema definitions
+                    fields.addAll(extractSchemaFromFlatteningConfig((Map<String, Object>) value));
+                } else if (value instanceof String) {
+                    // Direct field definition
+                    fields.add(DataTypes.FIELD(key, convertStringToDataType((String) value)));
+                }
+            }
+        } else if (flatteningConfig.containsKey("f.array_of_maps_to_rows")) {
+            Map<String, Object> arrayConfig = (Map<String, Object>) flatteningConfig.get("f.array_of_maps_to_rows");
+            for (Map.Entry<String, Object> entry : arrayConfig.entrySet()) {
+                String arrayKey = entry.getKey();
+                Map<String, Object> itemSchema = (Map<String, Object>) entry.getValue();
+                for (Map.Entry<String, Object> schemaEntry : itemSchema.entrySet()) {
+                    String fieldName = schemaEntry.getKey();
+                    String fieldType = (String) schemaEntry.getValue();
+                    fields.add(DataTypes.FIELD(fieldName, convertStringToDataType(fieldType)));
+                }
+            }
+        } else {
+            // This case handles the direct schema definition within f.array_of_maps_to_rows
+            // or any other direct schema definition.
+            for (Map.Entry<String, Object> entry : flatteningConfig.entrySet()) {
+                String fieldName = entry.getKey();
+                String fieldType = (String) entry.getValue();
+                fields.add(DataTypes.FIELD(fieldName, convertStringToDataType(fieldType)));
+            }
+        }
+        return fields;
+    }
+
+    private static DataType convertStringToDataType(String sqlDataType) throws Exception {
+        switch (sqlDataType.toLowerCase()) {
+            case "string":
+                return DataTypes.STRING();
+            case "integer":
+                return DataTypes.INT();
+            case "long":
+                return DataTypes.BIGINT();
+            case "double":
+                return DataTypes.DOUBLE();
+            case "boolean":
+                return DataTypes.BOOLEAN();
+            case "array<string>":
+                return DataTypes.ARRAY(DataTypes.STRING());
+            case "array<integer>":
+                return DataTypes.ARRAY(DataTypes.INT());
+            case "array<long>":
+                return DataTypes.ARRAY(DataTypes.BIGINT());
+            case "array<double>":
+                return DataTypes.ARRAY(DataTypes.DOUBLE());
+            case "array<boolean>":
+                return DataTypes.ARRAY(DataTypes.BOOLEAN());
+            default:
+                throw new Exception(String.format("Unknown data type (%s) - implementation needed.", sqlDataType));
+        }
+    }
+
     // build the table schema dynamically based off the schema map provided in the
     // ingestion config
-    private static Schema datastreamSchemaConverter(Map<String, String> sqlSchemaMap) throws Exception {
+    private static Schema buildSchemaFromConfig(Map<String, String> sqlSchemaMap, Map<String, Object> flatteningConfig) throws Exception {
 
         List<DataTypes.Field> fieldList = new ArrayList<DataTypes.Field>();
 
-        for (Map.Entry<String, String> entry : sqlSchemaMap.entrySet()) {
-            String columnName = entry.getKey();
-            String sqlDataType = entry.getValue();
+        if (flatteningConfig != null && !flatteningConfig.isEmpty()) {
+            fieldList.addAll(extractSchemaFromFlatteningConfig(flatteningConfig));
+        } else {
+            for (Map.Entry<String, String> entry : sqlSchemaMap.entrySet()) {
+                String columnName = entry.getKey();
+                String sqlDataType = entry.getValue();
 
-            DataTypes.Field dataType;
+                DataTypes.Field dataType;
 
-            switch (sqlDataType) {
-                case "STRING":
-                case "VARCHAR":
-                case "TEXT":
-                    dataType = DataTypes.FIELD(columnName, DataTypes.STRING());
-                    break;
-                case "LONG":
-                case "BIGINT":
-                    dataType = DataTypes.FIELD(columnName, DataTypes.BIGINT());
-                    break;
-                case "INT":
-                case "INTEGER":
-                    dataType = DataTypes.FIELD(columnName, DataTypes.INT());
-                    break;
-                case "DECIMAL":
-                    dataType = DataTypes.FIELD(columnName, DataTypes.DECIMAL(38, 18));
-                    break;
-                case "DOUBLE":
-                    dataType = DataTypes.FIELD(columnName, DataTypes.DOUBLE());
-                    break;
-                case "FLOAT":
-                    dataType = DataTypes.FIELD(columnName, DataTypes.FLOAT());
-                    break;
-                case "ARRAY<STRING>":
-                    dataType = DataTypes.FIELD(columnName, DataTypes.ARRAY(DataTypes.STRING()));
-                    break;
-                case "BOOL":
-                case "BOOLEAN":
-                    dataType = DataTypes.FIELD(columnName, DataTypes.BOOLEAN());
-                    break;
-                default:
-                    throw new Exception(
-                            String.format("Unknown data type (%s) - implementation needed.", sqlDataType));
+                switch (sqlDataType) {
+                    case "STRING":
+                    case "VARCHAR":
+                    case "TEXT":
+                        dataType = DataTypes.FIELD(columnName, DataTypes.STRING());
+                        break;
+                    case "LONG":
+                    case "BIGINT":
+                        dataType = DataTypes.FIELD(columnName, DataTypes.BIGINT());
+                        break;
+                    case "INT":
+                    case "INTEGER":
+                        dataType = DataTypes.FIELD(columnName, DataTypes.INT());
+                        break;
+                    case "DECIMAL":
+                        dataType = DataTypes.FIELD(columnName, DataTypes.DECIMAL(38, 18));
+                        break;
+                    case "DOUBLE":
+                        dataType = DataTypes.FIELD(columnName, DataTypes.DOUBLE());
+                        break;
+                    case "FLOAT":
+                        dataType = DataTypes.FIELD(columnName, DataTypes.FLOAT());
+                        break;
+                    case "ARRAY<STRING>":
+                        dataType = DataTypes.FIELD(columnName, DataTypes.ARRAY(DataTypes.STRING()));
+                        break;
+                    case "BOOL":
+                    case "BOOLEAN":
+                        dataType = DataTypes.FIELD(columnName, DataTypes.BOOLEAN());
+                        break;
+                    default:
+                        throw new Exception(
+                                String.format("Unknown data type (%s) - implementation needed.", sqlDataType));
 
+                }
+
+                fieldList.add(dataType);
             }
-
-            fieldList.add(dataType);
         }
 
         DataType rr = DataTypes.ROW(fieldList);
 
         Schema.Builder sb = Schema.newBuilder().column("f0", rr);
-        for (String columnName : sqlSchemaMap.keySet()) {
-            sb.columnByExpression(columnName, String.format("f0.`%s`", columnName));
+        for (DataTypes.Field field : fieldList) {
+            sb.columnByExpression(field.getName(), String.format("f0.`%s`", field.getName()));
         }
 
         return sb.build();

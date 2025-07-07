@@ -27,26 +27,28 @@ import org.slf4j.LoggerFactory;
 
 import javax.annotation.Nullable;
 
-public class HttpSplitReader implements SplitReader<Row, HttpSplit> {
+public class HttpSplitReader implements SplitReader<byte[], HttpSplit> {
 
     private static final Logger LOG = LoggerFactory.getLogger(HttpSplitReader.class);
     private final AtomicBoolean wakeup = new AtomicBoolean(false);
     private final Queue<HttpSplit> splits;
     private final HttpClient httpClient;
+    private final HttpSourceConfig config;
     @Nullable
     private String currentSplitId;
 
-    public HttpSplitReader() {
+    public HttpSplitReader(HttpSourceConfig config) {
         this.splits = new ArrayDeque<>();
         this.httpClient = HttpClient.newBuilder()
                 .followRedirects(HttpClient.Redirect.ALWAYS)
                 .connectTimeout(java.time.Duration.ofSeconds(15))
                 .build();
+        this.config = config;
     }
 
     @Override
-    public RecordsWithSplitIds<Row> fetch() {
-        Map<String, Collection<Row>> recordsBySplit = new HashMap<>();
+    public RecordsWithSplitIds<byte[]> fetch() {
+        Map<String, Collection<byte[]>> recordsBySplit = new HashMap<>();
         Set<String> finishedSplits = new HashSet<>();
 
         wakeup.compareAndSet(true, false);
@@ -65,11 +67,9 @@ public class HttpSplitReader implements SplitReader<Row, HttpSplit> {
                 LOG.info("Received response with status code: {} for URL: {}", response.statusCode(), split.url());
 
                 if (response.statusCode() == 200) {
-                    HttpRecordParser parser = HttpRecordParserFactory.fromConfig(split.config());
-                    byte[] respBody = response.body();
                     recordsBySplit.put(
                             split.splitId(),
-                            parser.parse(respBody));
+                            List.of(response.body()));
                 } else {
                     LOG.error("HTTP request failed with status code: {} for URL: {}", response.statusCode(),
                             split.url());

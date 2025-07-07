@@ -25,6 +25,7 @@ public class IngestionConfig implements Serializable {
     // Source Configuration
     private SourceConfig source;
     private Map<String, String> schema;
+    private Map<String, Object> flatteningConfig;
     private DestinationConfig destination;
     private MetadataConfig metadata;
     private ProcessingConfig processing;
@@ -46,6 +47,14 @@ public class IngestionConfig implements Serializable {
 
     public void setSchema(Map<String, String> schema) {
         this.schema = schema;
+    }
+
+    public Map<String, Object> getFlatteningConfig() {
+        return flatteningConfig;
+    }
+
+    public void setFlatteningConfig(Map<String, Object> flatteningConfig) {
+        this.flatteningConfig = flatteningConfig;
     }
 
     public String getSchemaString() {
