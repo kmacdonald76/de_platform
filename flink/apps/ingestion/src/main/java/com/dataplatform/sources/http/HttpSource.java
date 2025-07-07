@@ -4,6 +4,7 @@ import com.dataplatform.sources.http.enumerate.*;
 import com.dataplatform.sources.http.reader.*;
 
 import org.apache.flink.api.java.typeutils.ResultTypeQueryable;
+import org.apache.flink.types.Row;
 import org.apache.flink.api.common.typeinfo.TypeInformation;
 import org.apache.flink.annotation.Internal;
 

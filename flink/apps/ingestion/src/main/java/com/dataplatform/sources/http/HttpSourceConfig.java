@@ -18,7 +18,7 @@ public class HttpSourceConfig implements Serializable {
     private final String arrayField;
     private final String mapField;
     private final Map<String, Object> flatteningConfig;
-    private final org.apache.flink.table.api.Schema flinkSchema;
+    private final org.apache.flink.table.catalog.ResolvedSchema flinkSchema;
     private static final ObjectMapper objectMapper = new ObjectMapper();
     private final Map<String, String> parserOptions;
 
@@ -33,7 +33,7 @@ public class HttpSourceConfig implements Serializable {
             @JsonProperty("arrayField") String arrayField,
             @JsonProperty("mapField") String mapField,
             @JsonProperty("flatteningConfig") Map<String, Object> flatteningConfig,
-            org.apache.flink.table.api.Schema flinkSchema) {
+            org.apache.flink.table.catalog.ResolvedSchema flinkSchema) {
 
         this.url = url;
         this.iterationMechanism = iterationMechanism;
@@ -112,7 +112,7 @@ public class HttpSourceConfig implements Serializable {
         return flatteningConfig;
     }
 
-    public org.apache.flink.table.api.Schema getFlinkSchema() {
+    public org.apache.flink.table.catalog.ResolvedSchema getFlinkSchema() {
         return flinkSchema;
     }
 

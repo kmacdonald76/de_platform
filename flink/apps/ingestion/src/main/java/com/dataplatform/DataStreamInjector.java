@@ -17,6 +17,7 @@ import org.apache.flink.table.api.TableEnvironment;
 import org.apache.flink.table.api.bridge.java.StreamTableEnvironment;
 import org.apache.flink.types.Row;
 import org.apache.flink.table.types.DataType;
+import org.apache.flink.table.catalog.ResolvedSchema;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -65,6 +66,10 @@ public class DataStreamInjector {
             // Build the Flink Schema based on the ingestion config
             Schema schema = buildSchemaFromConfig(config.getSchema(), config.getFlatteningConfig());
 
+            // Obtain ResolvedSchema from the Schema
+            ResolvedSchema resolvedSchema = streamTableEnv.fromDataStream(env.fromElements(Row.of(1)), schema)
+                    .getResolvedSchema();
+
             // Create HttpSourceConfig from the ingestion config
             HttpSourceConfig httpConfig = new HttpSourceConfig(
                     config.getSource().getConnection().getUrl(),
@@ -76,19 +81,14 @@ public class DataStreamInjector {
                     config.getSource().getArrayField(),
                     config.getSource().getMapField(),
                     config.getFlatteningConfig(),
-                    schema);
+                    resolvedSchema);
 
             // Create the HttpSource
-            Source<Row, ?, ?> source = new HttpSource<>(httpConfig);
+            Source<Row, ?, ?> source = new HttpSource(httpConfig);
             DataStream<Row> rowStream = env.fromSource(source, WatermarkStrategy.noWatermarks(), "HttpSource")
                     .setParallelism(1);
 
             Table inputTable = streamTableEnv.fromDataStream(rowStream, schema);
-
-            // Register the table
-            streamTableEnv.createTemporaryView(
-                    String.format("lakehouse.source.%s", config.getDestination().getTable()),
-                    inputTable);
 
             return streamTableEnv;
         }
@@ -96,7 +96,8 @@ public class DataStreamInjector {
         return null;
     }
 
-    private static List<DataTypes.Field> extractSchemaFromFlatteningConfig(Map<String, Object> flatteningConfig) throws Exception {
+    private static List<DataTypes.Field> extractSchemaFromFlatteningConfig(Map<String, Object> flatteningConfig)
+            throws Exception {
         List<DataTypes.Field> fields = new ArrayList<>();
         if (flatteningConfig == null || flatteningConfig.isEmpty()) {
             return fields;
@@ -170,7 +171,8 @@ public class DataStreamInjector {
 
     // build the table schema dynamically based off the schema map provided in the
     // ingestion config
-    private static Schema buildSchemaFromConfig(Map<String, String> sqlSchemaMap, Map<String, Object> flatteningConfig) throws Exception {
+    private static Schema buildSchemaFromConfig(Map<String, String> sqlSchemaMap, Map<String, Object> flatteningConfig)
+            throws Exception {
 
         List<DataTypes.Field> fieldList = new ArrayList<DataTypes.Field>();
 

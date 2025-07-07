@@ -1,5 +1,6 @@
 package com.dataplatform.sources.http.impl;
 
+import org.apache.flink.table.catalog.ResolvedSchema;
 import com.dataplatform.JsonFlattener;
 import com.dataplatform.sources.http.*;
 import org.apache.flink.api.connector.source.SourceOutput;
@@ -28,13 +29,16 @@ public class HttpRecordEmitter implements RecordEmitter<byte[], Row, HttpSplit> 
             String jsonString = new String(rawData);
 
             if (config.getFlatteningConfig() != null && !config.getFlatteningConfig().isEmpty()) {
-                List<Map<String, Object>> flattenedRows = jsonFlattener.flatten(jsonString, config.getFlatteningConfig());
-                org.apache.flink.table.api.Schema flinkSchema = config.getFlinkSchema();
+                List<Map<String, Object>> flattenedRows = jsonFlattener.flatten(jsonString,
+                        config.getFlatteningConfig());
+                ResolvedSchema flinkSchema = config.getFlinkSchema();
 
                 for (Map<String, Object> flattenedRow : flattenedRows) {
-                    Row row = new Row(flinkSchema.getHighestIndex() + 1);
-                    for (int i = 0; i <= flinkSchema.getHighestIndex(); i++) {
-                        String fieldName = flinkSchema.getColumnNames().get(i);
+                    List<String> fieldNames = flinkSchema.getColumnNames();
+                    List<org.apache.flink.table.types.DataType> fieldTypes = flinkSchema.getColumnDataTypes();
+                    Row row = new Row(fieldNames.size());
+                    for (int i = 0; i < fieldNames.size(); i++) {
+                        String fieldName = fieldNames.get(i);
                         row.setField(i, flattenedRow.get(fieldName));
                     }
                     output.collect(row);

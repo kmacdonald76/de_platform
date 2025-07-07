@@ -15,7 +15,7 @@ public class HttpSourceReader
             SourceReaderContext context, HttpSourceConfig config) {
         super(
                 () -> new HttpSplitReader(config),
-                new HttpRecordEmitter<>(config),
+                new HttpRecordEmitter(config),
                 context.getConfiguration(),
                 context);
     }
