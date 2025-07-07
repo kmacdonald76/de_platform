@@ -15,16 +15,14 @@ import org.apache.flink.api.connector.source.SourceReaderContext;
 import org.apache.flink.api.connector.source.SplitEnumeratorContext;
 import org.apache.flink.core.io.SimpleVersionedSerializer;
 
-public class HttpSource<OUT>
-        implements Source<OUT, HttpSplit, HttpCheckpoint>, ResultTypeQueryable<OUT> {
+public class HttpSource
+        implements Source<Row, HttpSplit, HttpCheckpoint>, ResultTypeQueryable<Row> {
 
     private HttpSourceConfig config;
-    private Class<OUT> pojoClass;
 
     public HttpSource(
-            HttpSourceConfig config, Class<OUT> pojoClass) {
+            HttpSourceConfig config) {
         this.config = config;
-        this.pojoClass = pojoClass;
     }
 
     @Override
@@ -48,8 +46,8 @@ public class HttpSource<OUT>
 
     @Internal
     @Override
-    public SourceReader<OUT, HttpSplit> createReader(SourceReaderContext readerContext) {
-        return new HttpSourceReader<OUT>(readerContext);
+    public SourceReader<Row, HttpSplit> createReader(SourceReaderContext readerContext) {
+        return new HttpSourceReader(readerContext, config);
     }
 
     @Override
@@ -75,7 +73,7 @@ public class HttpSource<OUT>
     }
 
     @Override
-    public TypeInformation<OUT> getProducedType() {
-        return TypeInformation.of(pojoClass);
+    public TypeInformation<Row> getProducedType() {
+        return TypeInformation.of(Row.class);
     }
 }

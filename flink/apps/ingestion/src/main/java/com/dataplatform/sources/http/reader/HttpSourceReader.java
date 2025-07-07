@@ -8,14 +8,14 @@ import org.apache.flink.connector.base.source.reader.SingleThreadMultiplexSource
 import org.apache.flink.api.connector.source.SourceReaderContext;
 import java.util.Map;
 
-public class HttpSourceReader<OUT>
-        extends SingleThreadMultiplexSourceReaderBase<Row, OUT, HttpSplit, HttpSplit> {
+public class HttpSourceReader
+        extends SingleThreadMultiplexSourceReaderBase<byte[], Row, HttpSplit, HttpSplit> {
 
     public HttpSourceReader(
-            SourceReaderContext context) {
+            SourceReaderContext context, HttpSourceConfig config) {
         super(
-                () -> new HttpSplitReader(),
-                new HttpRecordEmitter<>(row -> (OUT) row),
+                () -> new HttpSplitReader(config),
+                new HttpRecordEmitter<>(config),
                 context.getConfiguration(),
                 context);
     }

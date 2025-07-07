@@ -17,6 +17,8 @@ public class HttpSourceConfig implements Serializable {
     private final Map<String, String> schema;
     private final String arrayField;
     private final String mapField;
+    private final Map<String, Object> flatteningConfig;
+    private final org.apache.flink.table.api.Schema flinkSchema;
     private static final ObjectMapper objectMapper = new ObjectMapper();
     private final Map<String, String> parserOptions;
 
@@ -29,7 +31,9 @@ public class HttpSourceConfig implements Serializable {
             @JsonProperty("schema") Map<String, String> schema,
             @JsonProperty("parserOptions") Map<String, String> parserOptions,
             @JsonProperty("arrayField") String arrayField,
-            @JsonProperty("mapField") String mapField) {
+            @JsonProperty("mapField") String mapField,
+            @JsonProperty("flatteningConfig") Map<String, Object> flatteningConfig,
+            org.apache.flink.table.api.Schema flinkSchema) {
 
         this.url = url;
         this.iterationMechanism = iterationMechanism;
@@ -39,6 +43,8 @@ public class HttpSourceConfig implements Serializable {
         this.parserOptions = parserOptions;
         this.arrayField = arrayField;
         this.mapField = mapField;
+        this.flatteningConfig = flatteningConfig;
+        this.flinkSchema = flinkSchema;
     }
 
     // Constructor that builds from JSON string
@@ -52,6 +58,8 @@ public class HttpSourceConfig implements Serializable {
         this.parserOptions = config.parserOptions;
         this.arrayField = config.arrayField;
         this.mapField = config.mapField;
+        this.flatteningConfig = config.flatteningConfig;
+        this.flinkSchema = config.flinkSchema;
     }
 
     // Convert the entire config to JSON string
@@ -97,6 +105,15 @@ public class HttpSourceConfig implements Serializable {
     @JsonProperty("parserOptions")
     public Map<String, String> getParserOptions() {
         return parserOptions;
+    }
+
+    @JsonProperty("flatteningConfig")
+    public Map<String, Object> getFlatteningConfig() {
+        return flatteningConfig;
+    }
+
+    public org.apache.flink.table.api.Schema getFlinkSchema() {
+        return flinkSchema;
     }
 
     // helper methods to get values from parameter list
