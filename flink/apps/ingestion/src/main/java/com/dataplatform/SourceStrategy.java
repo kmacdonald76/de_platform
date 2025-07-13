@@ -22,9 +22,9 @@ class SourceStrategy {
 
         StringBuilder options = new StringBuilder();
 
-        if (config.getSource().getType().equals("s3")) {
+        if (config.getSource().getS3() != null) {
             options.append("'connector' = 'filesystem',");
-            options.append(String.format("'path' = '%s',", config.getSource().getPath()));
+            options.append(String.format("'path' = '%s',", config.getSource().getS3().getPath()));
         }
 
         if (config.getSource().getFormat().equals("csv")) {
@@ -41,7 +41,7 @@ class SourceStrategy {
             //
             // The selected option depends on whether the user provided a column list
             // (option #1) or not (option #2)
-            if (config.getSchema() != null && config.getSchema().size() > 0) {
+            if (config.getSchema() != null && config.getSchema().getFields().size() > 0) {
 
                 options.append("'format' = 'json',");
 
@@ -62,7 +62,7 @@ class SourceStrategy {
                         "%s" +
                         ")",
                 config.getDestination().getTable(),
-                config.getSchemaString(),
+                config.getSchema().getSchemaString(),
                 options.toString().replaceAll(",$", ""));
 
         tableEnv.executeSql(ddlString);
