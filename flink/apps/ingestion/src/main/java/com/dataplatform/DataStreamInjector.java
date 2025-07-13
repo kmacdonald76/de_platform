@@ -59,8 +59,8 @@ public class DataStreamInjector {
             Map<String, String> parameters = null;
             // TODO: Add iteration to API config
             // if (config.getSource().getIteration() != null) {
-            //     mechanism = config.getSource().getIteration().getMechanism();
-            //     parameters = config.getSource().getIteration().getParameters();
+            // mechanism = config.getSource().getIteration().getMechanism();
+            // parameters = config.getSource().getIteration().getParameters();
             // }
 
             // Create HttpSourceConfig from the ingestion config
@@ -69,17 +69,16 @@ public class DataStreamInjector {
                     mechanism,
                     parameters,
                     config.getSource().getFormat(),
-                    config.getSchema().getFields(),
+                    config.getSchema(),
                     config.getSource().getParserOptions(),
-                    config.getSource().getArrayField(),
-                    config.getSource().getMapField());
+                    config.getSource().getFlatteningInstructions());
 
             // Create the HttpSource
             Source<Row, ?, ?> source = new HttpSource<>(httpConfig, Row.class);
             DataStream<Row> rowStream = env.fromSource(source, WatermarkStrategy.noWatermarks(), "HttpSource")
                     .setParallelism(1);
 
-            Schema schema = datastreamSchemaConverter(httpConfig.getSchema());
+            Schema schema = datastreamSchemaConverter(config.getSchema().getFields());
             Table inputTable = streamTableEnv.fromDataStream(rowStream, schema);
 
             // Register the table
