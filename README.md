@@ -163,6 +163,27 @@ Integrate your local machine's DNS with Minikube
   echo "server=/deplatform.local/$(minikube ip)" | sudo tee /etc/NetworkManager/dnsmasq.d/minikube.conf
   ```
 
+  # disable dnsmasq on your local machine, before starting minikube
+  -- /etc/NetworkManager/NetworkManager.conf
+  ```
+  [main]
+  dns=none
+  ```
+  ```bash
+  sudo service dnsmasq stop
+  sudo systemctl restart NetworkManager
+  ```
+
+  # re-enable dnsmasq after turning on minikube
+  -- /etc/NetworkManager/NetworkManager.conf
+  ```
+  [main]
+  dns=dnsmasq
+  ```
+  ```bash
+  sudo systemctl restart NetworkManager
+  ```
+
 ---
 
 ## Minio

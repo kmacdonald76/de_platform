@@ -32,7 +32,8 @@ class IcebergSinkStrategy implements SinkStrategy {
                         "  'format-version' = '2'\n" +
                         ")",
                 config.getDestination().getTable(),
-                config.getSchemaString());
+                config.getSchema().getSchemaString(),
+                config.getDestination().getTable());
 
         tableEnv.executeSql(ddlString);
 
@@ -43,7 +44,8 @@ class IcebergSinkStrategy implements SinkStrategy {
                         "'%s' " +
                         "FROM lakehouse.source.%s",
                 config.getDestination().getTable(),
-                config.getColumnList(),
+                config.getSchema().getColumnList(),
+                config.getMetadata().getLineageKey(),
                 config.getMetadata().getEnrichmentFieldsAsJsonString(),
                 config.getDestination().getTable());
 

@@ -36,12 +36,12 @@ public class DataStreamInjector {
             StreamExecutionEnvironment env = StreamExecutionEnvironment.getExecutionEnvironment();
             StreamTableEnvironment streamTableEnv = StreamTableEnvironment.create(env);
 
-            Source<Row, ?, ?> source = new ZippedJsonSource<Row>(new Path(config.getSource().getPath()),
+            Source<Row, ?, ?> source = new ZippedJsonSource<Row>(new Path(config.getSource().getS3().getPath()),
                     Row.class);
             DataStream<Row> rowStream = env.fromSource(source, WatermarkStrategy.noWatermarks(), "ZippedJsonSource")
                     .setParallelism(1);
 
-            Schema schema = datastreamSchemaConverter(config.getSchema());
+            Schema schema = datastreamSchemaConverter(config.getSchema().getFields());
 
             Table inputTable = streamTableEnv.fromDataStream(rowStream, schema);
 
@@ -57,18 +57,19 @@ public class DataStreamInjector {
 
             String mechanism = null;
             Map<String, String> parameters = null;
-            if (config.getSource().getIteration() != null) {
-                mechanism = config.getSource().getIteration().getMechanism();
-                parameters = config.getSource().getIteration().getParameters();
-            }
+            // TODO: Add iteration to API config
+            // if (config.getSource().getIteration() != null) {
+            //     mechanism = config.getSource().getIteration().getMechanism();
+            //     parameters = config.getSource().getIteration().getParameters();
+            // }
 
             // Create HttpSourceConfig from the ingestion config
             HttpSourceConfig httpConfig = new HttpSourceConfig(
-                    config.getSource().getConnection().getUrl(),
+                    config.getSource().getApi().getUrl(),
                     mechanism,
                     parameters,
                     config.getSource().getFormat(),
-                    config.getSchema(),
+                    config.getSchema().getFields(),
                     config.getSource().getParserOptions(),
                     config.getSource().getArrayField(),
                     config.getSource().getMapField());
