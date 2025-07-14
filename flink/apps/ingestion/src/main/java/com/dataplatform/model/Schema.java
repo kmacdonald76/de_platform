@@ -1,25 +1,17 @@
 package com.dataplatform.model;
 
+import java.util.HashMap;
 import java.util.Map;
 
-public class Schema {
-    private Map<String, String> fields;
-
-    public Map<String, String> getFields() {
-        return fields;
-    }
-
-    public void setFields(Map<String, String> fields) {
-        this.fields = fields;
-    }
+public class Schema extends HashMap<String, String> {
 
     public String getSchemaString() {
-        if (fields == null || fields.isEmpty()) {
-            return "item String";
+        if (this.isEmpty()) {
+            throw new IllegalArgumentException("Schema cannot be empty. Please provide at least one field.");
         }
 
         StringBuilder schemaBuilder = new StringBuilder();
-        for (Map.Entry<String, String> entry : fields.entrySet()) {
+        for (Map.Entry<String, String> entry : this.entrySet()) {
             schemaBuilder.append(String.format("`%s`", entry.getKey()))
                     .append(" ")
                     .append(entry.getValue())
@@ -30,12 +22,12 @@ public class Schema {
     }
 
     public String getColumnList() {
-        if (fields == null || fields.isEmpty()) {
-            return "item";
+        if (this.isEmpty()) {
+            return ""; // Or throw an exception if an empty column list is not allowed
         }
 
         StringBuilder schemaBuilder = new StringBuilder();
-        for (Map.Entry<String, String> entry : fields.entrySet()) {
+        for (Map.Entry<String, String> entry : this.entrySet()) {
             schemaBuilder.append(String.format("`%s`", entry.getKey()))
                     .append(",");
         }
@@ -44,6 +36,6 @@ public class Schema {
     }
 
     public int size() {
-        return fields.size();
+        return super.size();
     }
 }

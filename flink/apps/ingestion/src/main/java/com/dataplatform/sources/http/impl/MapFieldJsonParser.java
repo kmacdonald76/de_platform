@@ -47,7 +47,7 @@ public class MapFieldJsonParser implements HttpRecordParser {
             Row row = Row.withNames();
             Map.Entry<String, JsonNode> jsonEntry = iter.next();
 
-            for (Map.Entry<String, String> schemaEntry : schema.getFields().entrySet()) {
+            for (Map.Entry<String, String> schemaEntry : schema.entrySet()) {
                 String columnName = schemaEntry.getKey();
                 String dataType = schemaEntry.getValue();
 

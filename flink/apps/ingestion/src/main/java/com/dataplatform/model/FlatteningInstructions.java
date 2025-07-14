@@ -2,10 +2,11 @@ package com.dataplatform.model;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 
+import java.io.Serializable;
 import java.util.List;
 import java.util.Map;
 
-public class FlatteningInstructions {
+public class FlatteningInstructions implements Serializable {
     private String target;
     private Object includeParentFields; // Can be String ("all", "none") or List<String>
     private KeyAsColumn keyAsColumn;
@@ -70,7 +71,7 @@ public class FlatteningInstructions {
         this.selectFields = selectFields;
     }
 
-    public static class KeyAsColumn {
+    public static class KeyAsColumn implements Serializable {
         private String name;
         private String sourcePath;
 
@@ -91,7 +92,7 @@ public class FlatteningInstructions {
         }
     }
 
-    public static class Pivot {
+    public static class Pivot implements Serializable {
         private String keyColumnName;
         private String valuePath;
 
@@ -112,7 +113,7 @@ public class FlatteningInstructions {
         }
     }
 
-    public static class SelectField {
+    public static class SelectField implements Serializable {
         private String name;
         private String path;
         private String arrayHandling;

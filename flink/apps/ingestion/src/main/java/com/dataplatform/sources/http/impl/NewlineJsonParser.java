@@ -12,16 +12,14 @@ import java.nio.charset.StandardCharsets;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
-import com.dataplatform.model.Schema;
-
 public class NewlineJsonParser implements HttpRecordParser {
 
     private final ObjectMapper objectMapper = new ObjectMapper();
-    private final Schema schema;
+    private final Map<String, String> schema;
 
     private static final Logger LOG = LoggerFactory.getLogger(NewlineJsonParser.class);
 
-    public NewlineJsonParser(com.dataplatform.model.Schema schema) {
+    public NewlineJsonParser(Map<String, String> schema) {
         this.schema = schema;
     }
 
@@ -37,7 +35,7 @@ public class NewlineJsonParser implements HttpRecordParser {
             Row row = Row.withNames();
             JsonNode rootNode = objectMapper.readTree(line);
 
-            for (Map.Entry<String, String> entry : schema.getFields().entrySet()) {
+            for (Map.Entry<String, String> entry : schema.entrySet()) {
                 String columnName = entry.getKey();
                 String dataType = entry.getValue();
 

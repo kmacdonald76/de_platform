@@ -5,7 +5,6 @@ import java.util.List;
 import java.util.ArrayList;
 
 import org.apache.flink.api.common.eventtime.WatermarkStrategy;
-import org.apache.flink.api.common.functions.MapFunction;
 import org.apache.flink.api.connector.source.Source;
 import org.apache.flink.core.fs.Path;
 import org.apache.flink.streaming.api.datastream.DataStream;
@@ -41,7 +40,7 @@ public class DataStreamInjector {
             DataStream<Row> rowStream = env.fromSource(source, WatermarkStrategy.noWatermarks(), "ZippedJsonSource")
                     .setParallelism(1);
 
-            Schema schema = datastreamSchemaConverter(config.getSchema().getFields());
+            Schema schema = datastreamSchemaConverter(config.getSchema());
 
             Table inputTable = streamTableEnv.fromDataStream(rowStream, schema);
 
@@ -78,7 +77,10 @@ public class DataStreamInjector {
             DataStream<Row> rowStream = env.fromSource(source, WatermarkStrategy.noWatermarks(), "HttpSource")
                     .setParallelism(1);
 
-            Schema schema = datastreamSchemaConverter(config.getSchema().getFields());
+            LOG.error("KMDEBUG :11: " + config.getSchema().getSchemaString());
+
+            Schema schema = datastreamSchemaConverter(config.getSchema());
+
             Table inputTable = streamTableEnv.fromDataStream(rowStream, schema);
 
             // Register the table
@@ -97,6 +99,8 @@ public class DataStreamInjector {
     private static Schema datastreamSchemaConverter(Map<String, String> sqlSchemaMap) throws Exception {
 
         List<DataTypes.Field> fieldList = new ArrayList<DataTypes.Field>();
+
+        LOG.error("KMDEBUG :22: " + sqlSchemaMap.toString());
 
         for (Map.Entry<String, String> entry : sqlSchemaMap.entrySet()) {
             String columnName = entry.getKey();

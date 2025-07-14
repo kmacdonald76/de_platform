@@ -70,7 +70,7 @@ public class ArrayFieldJsonParser implements HttpRecordParser {
         for (JsonNode item : arrayNode) {
             Row row = Row.withNames();
 
-            for (Map.Entry<String, String> entry : schema.getFields().entrySet()) {
+            for (Map.Entry<String, String> entry : schema.entrySet()) {
                 String columnName = entry.getKey();
                 String dataType = entry.getValue();
 

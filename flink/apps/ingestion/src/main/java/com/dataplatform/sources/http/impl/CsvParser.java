@@ -12,15 +12,13 @@ import java.nio.charset.StandardCharsets;
 import org.apache.commons.csv.*;
 import java.io.*;
 
-import com.dataplatform.model.Schema;
-
 public class CsvParser implements HttpRecordParser {
 
-    private Schema schema;
+    private Map<String, String> schema;
     private Map<String, String> parserOptions;
     private static final Logger LOG = LoggerFactory.getLogger(CsvParser.class);
 
-    public CsvParser(com.dataplatform.model.Schema schema, Map<String, String> parserOptions) {
+    public CsvParser(Map<String, String> schema, Map<String, String> parserOptions) {
         this.schema = schema;
         this.parserOptions = parserOptions;
     }
@@ -50,7 +48,7 @@ public class CsvParser implements HttpRecordParser {
 
         List<Row> rows = new ArrayList<>();
 
-        int schemaSize = schema.getFields().keySet().size();
+        int schemaSize = schema.keySet().size();
 
         for (CSVRecord record : parser) {
             Row row = Row.withNames();
@@ -65,7 +63,7 @@ public class CsvParser implements HttpRecordParser {
             }
 
             int idx = 0;
-            for (Map.Entry<String, String> entry : schema.getFields().entrySet()) {
+            for (Map.Entry<String, String> entry : schema.entrySet()) {
                 String columnName = entry.getKey();
                 String dataType = entry.getValue();
                 String rawValue = record.get(idx++);

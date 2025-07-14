@@ -2,6 +2,7 @@ package com.dataplatform.utils;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
+import com.fasterxml.jackson.databind.DeserializationFeature;
 import java.io.IOException;
 
 import java.util.Map;
@@ -45,6 +46,7 @@ public class ConfigManager {
         String namespace = deduceNamespace(secretName);
         String yamlString = SecretReader.getValue(secretName, namespace);
         ObjectMapper mapper = new ObjectMapper(new YAMLFactory());
+        mapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
         return mapper.readValue(yamlString, configClass);
     }
 

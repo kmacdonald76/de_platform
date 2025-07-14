@@ -15,7 +15,7 @@ public class HttpSourceConfig implements Serializable {
     private final String iterationMechanism;
     private final Map<String, String> iterationParameters;
     private final String sourceFormat;
-    private final com.dataplatform.model.Schema schema;
+    private final Map<String, String> schema;
     private final FlatteningInstructions flatteningInstructions;
     private static final ObjectMapper objectMapper = new ObjectMapper();
     private final Map<String, String> parserOptions;
@@ -26,7 +26,7 @@ public class HttpSourceConfig implements Serializable {
             @JsonProperty("iterationMechanism") String iterationMechanism,
             @JsonProperty("iterationParameters") Map<String, String> iterationParameters,
             @JsonProperty("sourceFormat") String sourceFormat,
-            @JsonProperty("schema") com.dataplatform.model.Schema schema,
+            @JsonProperty("schema") Map<String, String> schema,
             @JsonProperty("parserOptions") Map<String, String> parserOptions,
             @JsonProperty("flatteningInstructions") FlatteningInstructions flatteningInstructions) {
 
@@ -82,7 +82,7 @@ public class HttpSourceConfig implements Serializable {
     }
 
     @JsonProperty("schema")
-    public com.dataplatform.model.Schema getSchema() {
+    public Map<String, String> getSchema() {
         return schema;
     }
 

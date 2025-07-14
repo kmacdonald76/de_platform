@@ -35,7 +35,7 @@ public class ArrayJsonParser implements HttpRecordParser {
         for (JsonNode element : rootNode) {
             Row row = Row.withNames();
 
-            for (java.util.Map.Entry<String, String> entry : schema.getFields().entrySet()) {
+            for (java.util.Map.Entry<String, String> entry : schema.entrySet()) {
                 String columnName = entry.getKey();
                 String dataType = entry.getValue();
 
