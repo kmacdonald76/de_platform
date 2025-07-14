@@ -14,14 +14,8 @@ public class HttpRecordParserFactory {
             case "jsonl":
                 return new NewlineJsonParser(config.getSchema());
 
-            case "json_array":
-                return new ArrayJsonParser(config.getSchema());
-
-            case "json_array_field":
-                return new ArrayFieldJsonParser(config.getSchema(), config.getArrayField());
-
-            case "json_map_field":
-                return new MapFieldJsonParser(config.getSchema(), config.getMapField());
+            case "json":
+                return new JsonFlattenerParser(config.getSchema(), config.getFlatteningInstructions());
 
             default:
                 throw new IllegalArgumentException("Unsupported parser type: " + config.getSourceFormat());

@@ -7,10 +7,8 @@ public class Source {
     private String format;
     private String packaging;
     private Map<String, Object> auth;
-    private Map<String, Object> flatteningInstructions;
+    private FlatteningInstructions flatteningInstructions;
     private Map<String, String> parserOptions;
-    private String arrayField;
-    private String mapField;
     private Api api;
     private S3 s3;
 
@@ -46,14 +44,6 @@ public class Source {
         this.auth = auth;
     }
 
-    public Map<String, Object> getFlatteningInstructions() {
-        return flatteningInstructions;
-    }
-
-    public void setFlatteningInstructions(Map<String, Object> flatteningInstructions) {
-        this.flatteningInstructions = flatteningInstructions;
-    }
-
     public Map<String, String> getParserOptions() {
         return parserOptions;
     }
@@ -62,20 +52,12 @@ public class Source {
         this.parserOptions = parserOptions;
     }
 
-    public String getArrayField() {
-        return arrayField;
+    public FlatteningInstructions getFlatteningInstructions() {
+        return flatteningInstructions;
     }
 
-    public void setArrayField(String arrayField) {
-        this.arrayField = arrayField;
-    }
-
-    public String getMapField() {
-        return mapField;
-    }
-
-    public void setMapField(String mapField) {
-        this.mapField = mapField;
+    public void setFlatteningInstructions(FlatteningInstructions flatteningInstructions) {
+        this.flatteningInstructions = flatteningInstructions;
     }
 
     public Api getApi() {

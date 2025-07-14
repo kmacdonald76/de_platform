@@ -1,5 +1,6 @@
 package com.dataplatform.sources.http;
 
+import com.dataplatform.model.FlatteningInstructions;
 import java.io.Serializable;
 import java.util.Map;
 
@@ -15,8 +16,7 @@ public class HttpSourceConfig implements Serializable {
     private final Map<String, String> iterationParameters;
     private final String sourceFormat;
     private final Map<String, String> schema;
-    private final String arrayField;
-    private final String mapField;
+    private final FlatteningInstructions flatteningInstructions;
     private static final ObjectMapper objectMapper = new ObjectMapper();
     private final Map<String, String> parserOptions;
 
@@ -28,8 +28,7 @@ public class HttpSourceConfig implements Serializable {
             @JsonProperty("sourceFormat") String sourceFormat,
             @JsonProperty("schema") Map<String, String> schema,
             @JsonProperty("parserOptions") Map<String, String> parserOptions,
-            @JsonProperty("arrayField") String arrayField,
-            @JsonProperty("mapField") String mapField) {
+            @JsonProperty("flatteningInstructions") FlatteningInstructions flatteningInstructions) {
 
         this.url = url;
         this.iterationMechanism = iterationMechanism;
@@ -37,8 +36,7 @@ public class HttpSourceConfig implements Serializable {
         this.sourceFormat = sourceFormat;
         this.schema = schema;
         this.parserOptions = parserOptions;
-        this.arrayField = arrayField;
-        this.mapField = mapField;
+        this.flatteningInstructions = flatteningInstructions;
     }
 
     // Constructor that builds from JSON string
@@ -50,8 +48,7 @@ public class HttpSourceConfig implements Serializable {
         this.sourceFormat = config.sourceFormat;
         this.schema = config.schema;
         this.parserOptions = config.parserOptions;
-        this.arrayField = config.arrayField;
-        this.mapField = config.mapField;
+        this.flatteningInstructions = config.flatteningInstructions;
     }
 
     // Convert the entire config to JSON string
@@ -59,14 +56,9 @@ public class HttpSourceConfig implements Serializable {
         return objectMapper.writeValueAsString(this);
     }
 
-    @JsonProperty("arrayField")
-    public String getArrayField() {
-        return arrayField;
-    }
-
-    @JsonProperty("mapField")
-    public String getMapField() {
-        return mapField;
+    @JsonProperty("flatteningInstructions")
+    public FlatteningInstructions getFlatteningInstructions() {
+        return flatteningInstructions;
     }
 
     @JsonProperty("url")
