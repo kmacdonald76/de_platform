@@ -153,36 +153,50 @@ Follow the instructions in this repository to set this up: [de_secrets](https://
 
 ## DNS
 
-Integrate your local machine's DNS with Minikube
+A more robust DNS solution is desireable for integrating your local machine's DNS with Minikube, so that you can easily transition between when the cluster is running and when it's not, and between reboots, without impacting your local machine's DNS.
 
-[Official Instructions](https://minikube.sigs.k8s.io/docs/handbook/addons/ingress-dns/#Linux)
+The following solution involves a one-time setup to permanently enable `dnsmasq` in NetworkManager, and then simple commands to add or remove the Minikube-specific DNS configuration when you start or stop the cluster.
 
-  # debian - NetworkManager
+### 1. One-Time Configuration
+
+First, you'll make a permanent change to your NetworkManager configuration to always use `dnsmasq`. This will provide a stable foundation for our DNS setup.
+
+1.  **Ensure no conflicting `dnsmasq` service is running:**
+    The NetworkManager `dnsmasq` plugin can conflict with a system-wide `dnsmasq` service. It's best to disable the system-wide service:
+    ```bash
+    sudo systemctl disable --now dnsmasq
+    ```
+    *(Note: If this command fails, it's likely you don't have the system-wide service installed, which is fine.)*
+
+2.  **Set NetworkManager to use `dnsmasq`:**
+    Edit `/etc/NetworkManager/NetworkManager.conf` and set `dns=dnsmasq` in the `[main]` section. The file should look like this:
+    ```ini
+    [main]
+    dns=dnsmasq
+    ```
+
+3.  **Restart NetworkManager:**
+    Apply the changes by restarting the NetworkManager service:
+    ```bash
+    sudo systemctl restart NetworkManager
+    ```
+
+After these steps, your system will be configured to use `dnsmasq` for all DNS queries, and you won't have to touch your `NetworkManager.conf` file again.
+
+### 2. Simplified Cluster Start/Stop
+
+Now, starting and stopping your cluster is as simple as running a script.
+
+**To Start Your Cluster:**
   ```bash
-  sudo mkdir -p /etc/NetworkManager/dnsmasq.d/
-  echo "server=/deplatform.local/$(minikube ip)" | sudo tee /etc/NetworkManager/dnsmasq.d/minikube.conf
+  ./start-cluster.sh
   ```
 
-  # disable dnsmasq on your local machine, before starting minikube
-  -- /etc/NetworkManager/NetworkManager.conf
-  ```
-  [main]
-  dns=none
-  ```
+**To Stop Your Cluster:**
   ```bash
-  sudo service dnsmasq stop
-  sudo systemctl restart NetworkManager
+  ./stop-cluster.sh
   ```
 
-  # re-enable dnsmasq after turning on minikube
-  -- /etc/NetworkManager/NetworkManager.conf
-  ```
-  [main]
-  dns=dnsmasq
-  ```
-  ```bash
-  sudo systemctl restart NetworkManager
-  ```
 
 ---
 
@@ -566,6 +580,12 @@ Integrate your local machine's DNS with Minikube
   ```bash
   mvn clean package -f flink/apps/
   mc cp flink/apps/ingestion/target/ingestion-1.0.0.jar local/flink-apps/
+  ```
+
+**Unit Tests**
+
+  ```bash
+  mvn test -pl flink/apps/ingestion
   ```
 
 <details>

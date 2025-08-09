@@ -146,7 +146,7 @@ public class JsonFlattenerParser implements HttpRecordParser {
             if (pivotedKey != null && fieldName.equals(instructions.getPivot().getKeyColumnName())) {
                 value = pivotedKey;
                 fieldPopulated = true;
-            } else if (pivotedKey != null && fieldName.equals(instructions.getKeyAsColumn().getName())) {
+            } else if (pivotedKey != null && instructions.getKeyAsColumn() != null && fieldName.equals(instructions.getKeyAsColumn().getName())) {
                 value = pivotedKey;
                 fieldPopulated = true;
             }
@@ -158,7 +158,7 @@ public class JsonFlattenerParser implements HttpRecordParser {
                         if (selectField.getName().equals(fieldName)) {
                             JsonNode node = JsonPath.using(jsonPathConfig).parse(currentNode)
                                     .read(selectField.getPath());
-                            value = handleField(node, selectField.getArrayHandling(), selectField.getObjectHandling());
+                            value = handleField(node, selectField.getArrayHandling(), selectField.getObjectHandling(), schema.get(fieldName));
                             fieldPopulated = true;
                             break;
                         }
@@ -167,7 +167,7 @@ public class JsonFlattenerParser implements HttpRecordParser {
                     // Default behavior if no selectFields: flatten all fields from currentNode
                     if (currentNode.isObject() && currentNode.has(fieldName)) {
                         JsonNode node = currentNode.get(fieldName);
-                        value = handleField(node, instructions.getArrayHandling(), instructions.getObjectHandling());
+                        value = handleField(node, instructions.getArrayHandling(), instructions.getObjectHandling(), schema.get(fieldName));
                         fieldPopulated = true;
                     } else if (currentNode.isArray() && fieldName.equals("item")) { // Heuristic for array target
                         value = currentNode.toString(); // Put the whole array as JSON string
@@ -217,54 +217,90 @@ public class JsonFlattenerParser implements HttpRecordParser {
         }
     }
 
-    private Object handleField(JsonNode node, String arrayHandling, String objectHandling) {
+    private Object handleField(JsonNode node, String arrayHandling, String objectHandling, String targetDataType) {
         if (node == null || node.isNull()) {
             return null;
         }
         if (node.isArray()) {
-            String effectiveArrayHandling = arrayHandling != null ? arrayHandling
-                    : (instructions.getArrayHandling() != null ? instructions.getArrayHandling() : "json");
-            switch (effectiveArrayHandling) {
-                case "explode":
-                    return node.toString(); // Should be handled by outer loop, but if nested, treat as json
-                case "ignore":
-                    return null;
-                case "json":
-                default:
-                    return node.toString();
+            // If it's an array and contains only one element, unwrap it
+            if (node.size() == 1) {
+                node = node.get(0);
+                // If the unwrapped node is still an array or object, recursively call handleField
+                if (node.isArray() || node.isObject()) {
+                    return handleField(node, arrayHandling, objectHandling, targetDataType);
+                }
+            } else {
+                String effectiveArrayHandling = arrayHandling != null ? arrayHandling
+                        : (instructions.getArrayHandling() != null ? instructions.getArrayHandling() : "json");
+                switch (effectiveArrayHandling) {
+                    case "explode":
+                        // This case should ideally be handled by the outer loop (parse method)
+                        // For now, treat as json if it's a nested array not meant for explosion at this level
+                        return node.toString();
+                    case "ignore":
+                        return null;
+                    case "json":
+                    default:
+                        return node.toString();
+                }
             }
-        } else if (node.isObject()) {
+        }
+
+        if (node.isObject()) {
             String effectiveObjectHandling = objectHandling != null ? objectHandling
                     : (instructions.getObjectHandling() != null ? instructions.getObjectHandling() : "json");
             switch (effectiveObjectHandling) {
                 case "flatten":
-                    return node.toString(); // Flattening requires dynamic schema, treat as json for now
+                    // Flattening requires dynamic schema, treat as json for now
+                    return node.toString();
                 case "ignore":
                     return null;
                 case "json":
                 default:
                     return node.toString();
             }
-        } else {
-            return convertJsonNode(node, "string"); // Convert primitive types
         }
+
+        // Convert primitive types
+        return convertJsonNode(node, targetDataType);
     }
 
     private Object convertJsonNode(JsonNode node, String dataType) {
         if (node == null || node.isNull()) {
             return null;
         }
+        
+        if (node.isArray()) {
+        	node = node.get(0);
+        }
         switch (dataType.toLowerCase()) {
             case "string":
-                return node.asText();
+            	String asdf = node.asText();
+                return asdf;
             case "integer":
-                return node.asInt();
+                if (node.isNumber()) {
+                    return node.asInt();
+                } else {
+                    return Integer.parseInt(node.asText());
+                }
             case "long":
-                return node.asLong();
+                if (node.isNumber()) {
+                    return node.asLong();
+                } else {
+                    return Long.parseLong(node.asText());
+                }
             case "double":
-                return node.asDouble();
+                if (node.isNumber()) {
+                    return node.asDouble();
+                } else {
+                    return Double.parseDouble(node.asText());
+                }
             case "boolean":
-                return node.asBoolean();
+                if (node.isBoolean()) {
+                    return node.asBoolean();
+                } else {
+                    return Boolean.parseBoolean(node.asText());
+                }
             default:
                 return node.asText(); // Default to string for unknown types
         }
