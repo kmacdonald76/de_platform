@@ -41,7 +41,7 @@ class SourceStrategy {
             //
             // The selected option depends on whether the user provided a column list
             // (option #1) or not (option #2)
-            if (config.getSchema() != null && config.getSchema().getFields().size() > 0) {
+            if (config.getSchema() != null && config.getSchema().size() > 0) {
 
                 options.append("'format' = 'json',");
 

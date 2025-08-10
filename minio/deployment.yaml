@@ -29,7 +29,7 @@ spec:
         - containerPort: 9000
         volumeMounts:
         - name: storage
-          mountPath: /data/
+          mountPath: /data
       volumes:
       - name: storage
         persistentVolumeClaim:

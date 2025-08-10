@@ -1,6 +1,5 @@
 package com.dataplatform;
 
-import com.dataplatform.utils.JsonUtils;
 import org.apache.flink.table.api.TableEnvironment;
 
 import org.slf4j.Logger;
@@ -45,7 +44,6 @@ class IcebergSinkStrategy implements SinkStrategy {
                         "FROM lakehouse.source.%s",
                 config.getDestination().getTable(),
                 config.getSchema().getColumnList(),
-                config.getMetadata().getLineageKey(),
                 config.getMetadata().getEnrichmentFieldsAsJsonString(),
                 config.getDestination().getTable());
 
