@@ -266,10 +266,10 @@ class JsonFlattenerParserTest {
         assertNotNull(result);
         assertEquals(1, result.size());
         Row row = result.get(0);
-        
+
         Object dataField = row.getField(1);
         Object objectField = row.getField(0);
-        
+
         assertEquals("some_data", dataField);
         assertNull(objectField); // object_field should be null
     }
@@ -324,5 +324,60 @@ class JsonFlattenerParserTest {
         Row row = result.get(0);
         assertEquals("some_data", row.getField(1));
         assertEquals("{\"key\":\"value\"}", row.getField(0)); // object_field should be JSON string
+    }
+
+    @Test
+    void parse_withParentFieldsAndArrayTarget_flattensCorrectly() throws Exception {
+        // Arrange
+        schema = new LinkedHashMap<>();
+        schema.put("category", "string");
+        schema.put("total_items", "integer");
+        schema.put("start_date", "string");
+        schema.put("end_date", "string");
+        schema.put("total_count", "integer");
+        schema.put("number", "integer");
+        schema.put("cask", "string");
+        schema.put("count", "string");
+        schema.put("percent", "string");
+
+        when(instructions.getTarget()).thenReturn("$.items");
+        when(instructions.getIncludeParentFields()).thenReturn("all");
+        when(instructions.getArrayHandling()).thenReturn("json");
+        when(instructions.getObjectHandling()).thenReturn("flatten");
+
+        String json = "{\"category\":\"cask_install\",\"total_items\":8154,\"start_date\":\"2025-07-10\",\"end_date\":\"2025-08-09\",\"total_count\":1547127,\"items\":[{\"number\":1,\"cask\":\"powershell\",\"count\":\"75,257\",\"percent\":\"4.86\"},{\"number\":2,\"cask\":\"git-credential-manager\",\"count\":\"61,894\",\"percent\":\"4\"},{\"number\":3,\"cask\":\"microsoft/git/microsoft-git\",\"count\":\"57,196\",\"percent\":\"3.70\"}]}";
+        byte[] record = json.getBytes();
+
+        parser = new JsonFlattenerParser(schema, instructions);
+
+        // Act
+        List<Row> result = parser.parse(record);
+
+        // Assert
+        assertNotNull(result);
+        assertEquals(3, result.size());
+
+        Row row1 = result.get(0);
+        assertEquals("cask_install", row1.getField(0));
+        assertEquals(8154, row1.getField(1));
+        assertEquals("2025-07-10", row1.getField(2));
+        assertEquals("2025-08-09", row1.getField(3));
+        assertEquals(1547127, row1.getField(4));
+        assertEquals(1, row1.getField(5));
+        assertEquals("powershell", row1.getField(6));
+        assertEquals("75,257", row1.getField(7));
+        assertEquals("4.86", row1.getField(8));
+
+        Row row2 = result.get(1);
+        assertEquals("cask_install", row2.getField(0));
+        assertEquals(8154, row2.getField(1));
+        assertEquals(2, row2.getField(5));
+        assertEquals("git-credential-manager", row2.getField(6));
+
+        Row row3 = result.get(2);
+        assertEquals("cask_install", row3.getField(0));
+        assertEquals(8154, row3.getField(1));
+        assertEquals(3, row3.getField(5));
+        assertEquals("microsoft/git/microsoft-git", row3.getField(6));
     }
 }
