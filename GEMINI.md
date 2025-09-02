@@ -789,12 +789,12 @@ Now, starting and stopping your cluster is as simple as running a script.
   <summary>Optional Commands</summary>
 
   ```bash
-  # webserver logs
-  kubectl logs -f $(kubectl get pods -n airflow | egrep -o "airflow-webserver\S+") -n airflow
+  # api-server logs
+  kubectl logs -f $(kubectl get pods -n airflow | egrep -o "airflow-api-server\S+") -n airflow
   ```
   ```bash
-  # webserver shell
-  kubectl exec -it $(kubectl get pods -n airflow | egrep -o "airflow-webserver\S+") -n airflow -- /bin/bash
+  # api-server shell
+  kubectl exec -it $(kubectl get pods -n airflow | egrep -o "airflow-api-server\S+") -n airflow -- /bin/bash
   ```
   ```bash
   # manually execute a git-sync operation
@@ -857,19 +857,6 @@ Now, starting and stopping your cluster is as simple as running a script.
   helm upgrade --install --values logging/alloy_values.yaml --namespace logging alloy grafana/alloy
   ```
 
-**Deploy Grafana**
-  ```bash
-  kubectl config set-context --current --namespace=logging
-  helm upgrade --install --values logging/grafana_values.yaml --namespace logging grafana grafana/grafana
-  kubectl apply -f logging/ingress.yaml -n logging
-  ```
-  ```bash
-  # Obtain grafana password (username=admin)
-  kubectl get secret --namespace logging grafana -o jsonpath="{.data.admin-password}" | base64 --decode ; echo
-  ```
-[Grafana Web UI](http://grafana.deplatform.local/)
-
-
 <details>
   <summary>Optional Commands</summary>
 
@@ -904,6 +891,49 @@ Now, starting and stopping your cluster is as simple as running a script.
   ```
 </details>
 
+
+## Monitoring
+
+- Prometheus = Metrics collection and storage
+- Grafana = UI for dashboards
+
+**Initial Setup**
+
+
+
+**Deploy**
+```bash
+  helm repo add prometheus-community https://prometheus-community.github.io/helm-charts
+  kubectl create namespace monitoring
+  helm upgrade --install prometheus prometheus-community/kube-prometheus-stack -n monitoring -f monitoring/grafana_values.yaml
+  kubectl apply -f monitoring/ingress.yaml -n monitoring
+```
+
+[Grafana Web UI](http://grafana.deplatform.local/)
+
+<details>
+  <summary>Optional Commands</summary>
+
+  ```bash
+  # Delete prometheus
+  helm delete prometheus --ignore-not-found
+  ```
+
+  ```bash
+  # Delete grafana
+  helm delete grafana --namespace logging
+  kubectl delete -f monitoring/ingress.yaml -n logging
+  ```
+</details>
+
+**Sample Queries**
+
+- **Memory Usage by Namespace:**
+  ```promql
+  sum(container_memory_working_set_bytes) by (namespace)
+  ```
+
+
 ## Data Platform Webpage
 
 The homepage is useful as a dashboard for all the services you now have access to.
@@ -935,4 +965,3 @@ The homepage is useful as a dashboard for all the services you now have access t
 4. Open the [Airflow UI](http://airflow.deplatform.local/) and enable your new pipeline.
 
 *Rerun the CI script after making any further modifications to your configuration files.*
-

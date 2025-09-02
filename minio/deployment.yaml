@@ -22,9 +22,9 @@ spec:
           - --console-address=:9001
         envFrom:
           - secretRef:
-              name: services.minio.raw-root-user
+              name: services.minio.root-user
           - secretRef:
-              name: services.minio.raw-root-password
+              name: services.minio.root-password
         ports:
         - containerPort: 9000
         volumeMounts:

@@ -67,7 +67,7 @@ spec:
             volumes:
             - name: hive-conf
               secret:
-                secretName: services.flink.raw-hive-conf
+                secretName: services.flink.hive-conf
             containers:
                 - name: flink-main-container
                   volumeMounts:

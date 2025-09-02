@@ -47,12 +47,12 @@ backend:
     - name: LOKI_ACCESS_KEY
       valueFrom:
         secretKeyRef:
-          name: services.logging.raw-loki-access-key
+          name: services.logging.loki-access-key
           key: LOKI_ACCESS_KEY
     - name: LOKI_SECRET_KEY
       valueFrom:
         secretKeyRef:
-          name: services.logging.raw-loki-secret-key
+          name: services.logging.loki-secret-key
           key: LOKI_SECRET_KEY
 read:
   replicas: 1

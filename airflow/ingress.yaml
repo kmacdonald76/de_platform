@@ -29,6 +29,6 @@ spec:
       protocol: TCP
   type: NodePort
   selector:
-    component: webserver  # Update to match the correct label
+    component: api-server  # Update to match the correct label
     release: airflow
     tier: airflow

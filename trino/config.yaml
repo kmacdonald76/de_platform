@@ -43,9 +43,9 @@ serviceAccount:
 
 envFrom:
   - secretRef:
-      name: services.trino.raw-aws-access-key
+      name: services.trino.aws-access-key
   - secretRef:
-      name: services.trino.raw-aws-secret-key
+      name: services.trino.aws-secret-key
 
 additionalConfigProperties:
   - http-server.process-forwarded=true
