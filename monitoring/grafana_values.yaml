@@ -1,6 +1,9 @@
 grafana:
+  adminPassword: ""
   admin:
     existingSecret: "services.monitoring.grafana-credentials"
+    userKey: admin-user
+    passwordKey: admin-password
   additionalDataSources:
     - name: Loki
       type: loki

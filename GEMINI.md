@@ -204,8 +204,8 @@ Now, starting and stopping your cluster is as simple as running a script.
 
 *First, set your minio credentials in the secret manager and sync to minikube*
   ```bash
-  secrets/services/minio/raw_root_user.yaml
-  secrets/services/minio/raw_root_password.yaml
+  secrets/services/minio/root_user.yaml
+  secrets/services/minio/root_password.yaml
   ```
 
 **Deploy**
@@ -263,10 +263,10 @@ Now, starting and stopping your cluster is as simple as running a script.
 
 *First, set your config & credentials in the secret manager and sync to minikube*
   ```bash
-  secrets/services/iceberg/raw_postgres_conf.yaml
-  secrets/services/iceberg/raw_postgres_hba_conf.yaml
-  secrets/services/iceberg/raw_postgres_password.yaml
-  secrets/services/iceberg/raw_postgres_user.yaml
+  secrets/services/iceberg/postgres_conf.yaml
+  secrets/services/iceberg/postgres_hba_conf.yaml
+  secrets/services/iceberg/postgres_password.yaml
+  secrets/services/iceberg/postgres_user.yaml
   ```
 
 **Deploy**
@@ -318,7 +318,7 @@ Now, starting and stopping your cluster is as simple as running a script.
 
 *First, set your config & credentials in the secret manager and sync to minikube*
   ```bash
-  secrets/services/iceberg/raw_hive_conf.yaml
+  secrets/services/iceberg/hive_conf.yaml
   ```
 
 **Build custom docker image & load into minikube**
@@ -381,10 +381,9 @@ Now, starting and stopping your cluster is as simple as running a script.
   ```bash
   secrets/services/flink/hadoop_conf.yaml
   secrets/services/flink/iceberg_properties.yaml
-  secrets/services/flink/raw_aws_access_key.yaml
-  secrets/services/flink/raw_aws_secret_key.yaml
-  secrets/services/flink/raw_flink_properties.yaml
-  secrets/services/flink/raw_hive_conf.yaml
+  secrets/services/flink/aws_credentials.yaml
+  secrets/services/flink/flink_properties.yaml
+  secrets/services/flink/hive_conf.yaml
   secrets/services/flink/table_ingest.yaml
   ```
 
@@ -501,8 +500,6 @@ Now, starting and stopping your cluster is as simple as running a script.
   ```
 
 **Run SQL through the sql-client terminal**
-
-*(replace IP address w/ your minikube IP - get via command `minikube ip` and access key/secret)*
 
   ```sql
   CREATE CATALOG lakehouse WITH (

@@ -15,7 +15,6 @@ import java.util.Map;
 import org.yaml.snakeyaml.Yaml;
 import java.util.HashMap;
 
-
 public class SecretReader {
 
     private static final Logger LOG = LoggerFactory.getLogger(SecretReader.class);
@@ -26,13 +25,18 @@ public class SecretReader {
         try (KubernetesClient client = new KubernetesClientBuilder().withConfig(configBuilder.build()).build()) {
 
             Secret secret = client.secrets().inNamespace(namespace).withName(secretName).get();
-            
+
             if (secret == null) {
                 LOG.error("Secret " + secretName + " not found in namespace " + namespace);
                 return null;
             }
 
             Map<String, String> data = secret.getData();
+
+            if (data == null) {
+                throw new RuntimeException(
+                        "Secret " + secretName + " in namespace " + namespace + " contains no data.");
+            }
 
             for (Map.Entry<String, String> entry : data.entrySet()) {
                 return new String(Base64.getDecoder().decode(entry.getValue()), StandardCharsets.UTF_8);
@@ -45,19 +49,37 @@ public class SecretReader {
         return null;
     }
 
-    public static HashMap<String, String> getValueAsHashMap(String secretName, String namespace) {
+    public static HashMap<String, String> getMultiKeySecret(String secretName, String namespace) {
 
-        String yamlString = getValue(secretName, namespace);
-
-        Yaml yaml = new Yaml();
-        Map<String, Object> map = yaml.load(yamlString);
         HashMap<String, String> result = new HashMap<>();
+        LOG.info("Reading service secret '" + secretName + "' from namespace '" + namespace + "'");
 
-        for (Map.Entry<String, Object> entry : map.entrySet()) {
-            result.put(entry.getKey(), entry.getValue().toString());
+        try (KubernetesClient client = new KubernetesClientBuilder().withConfig(configBuilder.build()).build()) {
+
+            Secret secret = client.secrets().inNamespace(namespace).withName(secretName).get();
+
+            if (secret == null) {
+                LOG.error("Secret " + secretName + " not found in namespace " + namespace);
+                return result;
+            }
+
+            Map<String, String> data = secret.getData();
+
+            if (data == null) {
+                throw new RuntimeException(
+                        "Secret " + secretName + " in namespace " + namespace + " contains no data.");
+            }
+
+            for (Map.Entry<String, String> entry : data.entrySet()) {
+                String key = entry.getKey();
+                String value = new String(Base64.getDecoder().decode(entry.getValue()), StandardCharsets.UTF_8);
+                result.put(key, value);
+                LOG.debug("Loaded key '" + key + "' from secret '" + secretName + "'");
+            }
+
+        } catch (KubernetesClientException e) {
+            LOG.error("Error reading secret " + secretName + " from namespace " + namespace, e);
         }
-
         return result;
     }
 }
-

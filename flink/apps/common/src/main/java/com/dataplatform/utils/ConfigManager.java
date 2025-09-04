@@ -32,8 +32,9 @@ public class ConfigManager {
     public static org.apache.flink.configuration.Configuration setupFlinkConfig(String secretName) {
 
         String namespace = deduceNamespace(secretName);
+        LOG.info("Setting up Flink config from secret '" + secretName + "' in namespace '" + namespace + "'");
         org.apache.flink.configuration.Configuration flinkConfig = new org.apache.flink.configuration.Configuration();
-        HashMap<String, String> map = SecretReader.getValueAsHashMap(secretName, namespace);
+        HashMap<String, String> map = SecretReader.getMultiKeySecret(secretName, namespace);
 
         for (Map.Entry<String, String> entry : map.entrySet()) {
             flinkConfig.setString(entry.getKey(), entry.getValue());
